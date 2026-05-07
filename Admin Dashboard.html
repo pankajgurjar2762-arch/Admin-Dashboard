@@ -1,0 +1,1429 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Maa Narmada Yoga Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0f7f4;
+  --card:#ffffff;
+  --accent:#0f9d58;
+  --accent2:#ff9800;
+  --accent-light:rgba(15,157,88,0.1);
+  --danger:#e53935;
+  --muted:#6b7280;
+  --text:#0f172a;
+  --border:#e2ecf6;
+  --shadow:0 4px 20px rgba(15,23,42,0.08);
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+
+/* ── Header ── */
+.header{
+  background:linear-gradient(135deg,#0a7d44 0%,#0f9d58 50%,#e65c00 100%);
+  padding:14px 24px;color:#fff;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 2px 12px rgba(0,0,0,0.15);
+  position:sticky;top:0;z-index:100;
+}
+.brand{display:flex;gap:14px;align-items:center}
+.logo-circle{
+  width:56px;height:56px;border-radius:50%;
+  background:#fff;padding:6px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+  overflow:hidden;flex-shrink:0;
+}
+.logo-circle img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.brand-text{line-height:1.3}
+.brand-text h1{font-size:17px;font-weight:800;letter-spacing:0.3px}
+.brand-text p{font-size:12px;opacity:0.85}
+.header-right{font-size:12px;opacity:0.9;text-align:right}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 84px)}
+
+/* ── Sidebar ── */
+.sidebar{
+  background:#fff;
+  border-right:1px solid var(--border);
+  padding:20px 12px;
+  display:flex;flex-direction:column;gap:4px;
+  position:sticky;top:84px;height:calc(100vh - 84px);overflow-y:auto;
+}
+.sidebar-title{
+  font-size:11px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;text-transform:uppercase;
+  padding:8px 10px 4px;
+}
+.nav-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:10px;
+  border:none;background:transparent;
+  width:100%;text-align:left;cursor:pointer;
+  font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;
+  color:var(--text);transition:all 0.18s;
+}
+.nav-btn:hover{background:var(--accent-light);color:var(--accent)}
+.nav-btn.active{background:var(--accent);color:#fff;font-weight:700;box-shadow:0 4px 12px rgba(15,157,88,0.3)}
+.nav-btn .icon{font-size:18px;width:24px;text-align:center}
+.nav-divider{height:1px;background:var(--border);margin:8px 0}
+
+/* ── Main content ── */
+.main{padding:20px;overflow-y:auto}
+.panel{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px;margin-bottom:16px;
+}
+.panel h3{font-size:18px;font-weight:700;margin-bottom:4px}
+.panel .subtitle{font-size:13px;color:var(--muted);margin-bottom:16px}
+
+/* ── Form elements ── */
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px}
+.form-group label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.input{
+  padding:10px 14px;border-radius:10px;
+  border:1.5px solid var(--border);
+  font-family:'Poppins',sans-serif;font-size:14px;
+  width:100%;background:#fff;color:var(--text);
+  transition:border 0.2s;
+}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,157,88,0.12)}
+
+/* ── Buttons ── */
+.btn{
+  padding:9px 16px;border-radius:10px;
+  border:1.5px solid var(--border);
+  font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all 0.18s;
+  background:#fff;color:var(--text);
+}
+.btn:hover{border-color:#bbb;background:#f8f9fa}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:#0a8a4a;box-shadow:0 4px 12px rgba(15,157,88,0.3)}
+.btn.warn{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.btn.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn.sm{padding:6px 12px;font-size:12px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* ── Table ── */
+.table-wrap{overflow-x:auto;margin-top:12px;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead tr{background:#f8fafc}
+th{padding:11px 14px;text-align:left;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);border-bottom:1px solid var(--border)}
+td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f9fffe}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.3px}
+.badge.green{background:#e6f9f0;color:#0a7d44}
+.badge.orange{background:#fff3e0;color:#e65c00}
+
+/* ── Invoice preview ── */
+.invoice-card{
+  border:1px solid var(--border);border-radius:12px;
+  padding:24px;background:#fff;
+  position:relative;overflow:hidden;max-width:600px;
+  margin-top:16px;
+}
+.invoice-header{text-align:center;margin-bottom:16px}
+.invoice-header h2{font-size:20px;font-weight:800;color:var(--accent)}
+.invoice-header p{font-size:13px;color:var(--muted)}
+
+/* ── WATERMARK: centered, higher opacity ── */
+.invoice-watermark{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-25deg);
+  opacity:0.18;
+  font-size:72px;font-weight:900;
+  color:var(--accent);pointer-events:none;white-space:nowrap;
+  z-index:0;letter-spacing:4px;
+  width:100%;text-align:center;
+}
+.invoice-watermark-logo{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-20deg);
+  width:280px;height:280px;
+  object-fit:contain;
+  opacity:0.18;pointer-events:none;z-index:0;
+}
+
+.invoice-card > *:not(.invoice-watermark):not(.invoice-watermark-logo){
+  position:relative;z-index:1;
+}
+.invoice-table{width:100%;border-collapse:collapse;margin:12px 0}
+.invoice-table tr td:first-child{color:var(--muted);font-size:13px;font-weight:600;padding:7px 0;width:150px}
+.invoice-table tr td:last-child{font-weight:600;font-size:14px;padding:7px 0}
+.invoice-total{
+  background:linear-gradient(90deg,var(--accent),#14c772);
+  color:#fff;padding:12px 16px;border-radius:10px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-weight:700;font-size:16px;margin-top:12px;
+}
+.invoice-footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
+
+/* ── Stats cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px}
+.stat-card{
+  background:var(--card);border-radius:12px;
+  padding:16px 20px;box-shadow:var(--shadow);
+  border-left:4px solid var(--accent);
+}
+.stat-card.orange{border-left-color:var(--accent2)}
+.stat-card.blue{border-left-color:#1976d2}
+.stat-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.stat-value{font-size:28px;font-weight:800;margin-top:4px;color:var(--text)}
+
+/* ── Modal ── */
+.modal-backdrop{
+  position:fixed;inset:0;
+  background:rgba(2,6,23,0.55);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;
+  backdrop-filter:blur(4px);
+}
+.modal{
+  width:420px;max-width:95vw;
+  background:var(--card);padding:28px;
+  border-radius:var(--radius);
+  box-shadow:0 24px 60px rgba(2,6,23,0.4);
+  animation:modalIn 0.25s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:none}}
+.modal h2{font-size:22px;font-weight:800;margin-bottom:6px}
+.modal .subtitle{font-size:13px;color:var(--muted);margin-bottom:18px}
+.modal .field{margin-bottom:14px}
+.modal .field label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
+.error-msg{color:var(--danger);font-size:13px;margin-top:8px;font-weight:500}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-260px;top:0;height:100vh;z-index:200;transition:left 0.3s;padding-top:90px}
+  .sidebar.open{left:0;box-shadow:4px 0 20px rgba(0,0,0,0.15)}
+  .hamburger{display:flex!important}
+  .main{padding:14px}
+}
+.hamburger{
+  display:none;background:transparent;border:none;
+  color:#fff;font-size:24px;cursor:pointer;padding:4px;
+}
+.overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:199;
+}
+.overlay.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="brand">
+    <button class="hamburger" onclick="toggleSidebar()" title="Menu">☰</button>
+    <div class="logo-circle">
+      <img id="headerLogo" src="https://i.imgur.com/placeholder.png" alt="Logo" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><circle cx=%2232%22 cy=%2232%22 r=%2232%22 fill=%22%230f9d58%22/><text x=%2232%22 y=%2240%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2228%22 font-weight=%22bold%22>🧘</text></svg>'">
+    </div>
+    <div class="brand-text">
+      <h1>Maa Narmada Yoga Bhopal</h1>
+      <p>📞 7415602011 | Admin Panel</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div>Signed in as: <strong id="userLabel">—</strong></div>
+    <div style="font-size:11px;margin-top:2px;opacity:0.7" id="currentTime"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- ═══ LAYOUT ═══ -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">Main Menu</div>
+    <button class="nav-btn active" id="nav-newReg" onclick="showSection('newReg')">
+      <span class="icon">📝</span> New Registration
+    </button>
+    <button class="nav-btn" id="nav-generate" onclick="showSection('generate')">
+      <span class="icon">🧾</span> Generate Invoice
+    </button>
+    <button class="nav-btn" id="nav-verify" onclick="showSection('verify')">
+      <span class="icon">✅</span> Verify Invoice
+    </button>
+    <div class="nav-divider"></div>
+    <div class="sidebar-title">Analytics</div>
+    <button class="nav-btn" id="nav-reports" onclick="showSection('reports')">
+      <span class="icon">📊</span> Reports
+    </button>
+    <div class="nav-divider"></div>
+    <div class="sidebar-title">Settings</div>
+    <button class="nav-btn" id="nav-users" onclick="showSection('users')">
+      <span class="icon">👥</span> Users
+    </button>
+    <button class="nav-btn" id="nav-audit" onclick="showSection('audit')">
+      <span class="icon">🔍</span> Audit Log
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="showSection('settings')">
+      <span class="icon">⚙️</span> Settings
+    </button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" style="color:var(--danger)" onclick="logout()">
+      <span class="icon">🚪</span> Logout
+    </button>
+  </aside>
+
+  <!-- MAIN SECTIONS -->
+  <main class="main">
+
+    <!-- ── New Registration ── -->
+    <section id="newReg" class="section">
+      <div class="panel">
+        <h3>📝 New Registration</h3>
+        <p class="subtitle">नई student का registration करें। Registration number खाली छोड़ें तो auto-generate होगा।</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Reg No (optional)</label>
+            <input id="reg_regNo" class="input" placeholder="e.g. REG001">
+          </div>
+          <div class="form-group">
+            <label>Student Name *</label>
+            <input id="reg_name" class="input" placeholder="Full Name">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input id="reg_phone" class="input" placeholder="10-digit number">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Course / Month</label>
+            <input id="reg_course" class="input" placeholder="e.g. Yoga - June 2025">
+          </div>
+          <div class="form-group">
+            <label>Amount (₹)</label>
+            <input id="reg_amount" class="input" type="number" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label>Trainer</label>
+            <input id="reg_trainer" class="input" placeholder="Trainer Name">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Join Date</label>
+            <input id="reg_date" class="input" type="date">
+          </div>
+          <div class="form-group">
+            <label>Address / Notes</label>
+            <input id="reg_notes" class="input" placeholder="Optional notes">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="createRegistration()">💾 Save Registration</button>
+          <button class="btn" onclick="clearRegForm()">🗑️ Clear</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>📋 All Registrations</h3>
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <input class="input" id="reg_search" placeholder="🔍 Search by name or reg no..." oninput="renderRegsList()" style="max-width:320px">
+        </div>
+        <div id="regsListContainer"></div>
+      </div>
+    </section>
+
+    <!-- ── Generate Invoice ── -->
+    <section id="generate" class="section hidden">
+      <div class="panel">
+        <h3>🧾 Generate Invoice</h3>
+        <p class="subtitle">Student search करें और invoice generate करें।</p>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <input id="gen_search" class="input" placeholder="🔍 Name या Reg No से search करें..." oninput="renderGenList()" style="max-width:360px">
+        </div>
+        <div id="genList"></div>
+      </div>
+      <div id="invoicePreviewArea"></div>
+    </section>
+
+    <!-- ── Verify ── -->
+    <section id="verify" class="section hidden">
+      <div class="panel">
+        <h3>✅ Verify Invoice</h3>
+        <p class="subtitle">Invoices को verify/paid mark करें।</p>
+        <div id="verifyList"></div>
+      </div>
+    </section>
+
+    <!-- ── Reports ── -->
+    <section id="reports" class="section hidden">
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="panel">
+        <h3>📊 Reports</h3>
+        <p class="subtitle">सभी registrations और payment details।</p>
+        <div class="btn-row">
+          <button class="btn primary" onclick="renderReportTable()">📋 View Details</button>
+          <button class="btn warn" onclick="downloadCSV()">⬇️ Export CSV</button>
+        </div>
+        <div id="reportTable"></div>
+      </div>
+    </section>
+
+    <!-- ── Users ── -->
+    <section id="users" class="section hidden">
+      <div class="panel">
+        <h3>👥 User Management</h3>
+        <p class="subtitle">Admin users बनाएं और manage करें।</p>
+        <div id="adminOnlyUserCreate">
+          <h4 style="margin-bottom:10px;font-size:15px">New User बनाएं</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Username</label>
+              <input id="new_user" class="input" placeholder="username">
+            </div>
+            <div class="form-group">
+              <label>Display Name</label>
+              <input id="new_user_display" class="input" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input id="new_user_pass" class="input" type="password" placeholder="••••••">
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <select id="new_user_role" class="input">
+                <option value="trainer">🧘 Trainer</option>
+                <option value="admin">🔑 Admin</option>
+              </select>
+            </div>
+            <div class="form-group" style="justify-content:flex-end">
+              <label>&nbsp;</label>
+              <button class="btn primary" onclick="createUser()">➕ Create User</button>
+            </div>
+          </div>
+        </div>
+        <h4 style="margin:16px 0 10px;font-size:15px">All Users</h4>
+        <div id="usersList"></div>
+      </div>
+      <div class="panel">
+        <h3>🔑 Change Password</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Username</label>
+            <input id="cp_user" class="input" placeholder="username">
+          </div>
+          <div class="form-group">
+            <label>Old Password</label>
+            <input id="cp_old" class="input" type="password" placeholder="••••••">
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input id="cp_new" class="input" type="password" placeholder="••••••">
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <label>&nbsp;</label>
+            <button class="btn warn" onclick="changePassword()">🔑 Change</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Audit ── -->
+    <section id="audit" class="section hidden">
+      <div class="panel">
+        <h3>🔍 Audit Log</h3>
+        <p class="subtitle">सभी admin actions का record।</p>
+        <div id="auditList"></div>
+      </div>
+    </section>
+
+    <!-- ── Settings ── -->
+    <section id="settings" class="section hidden">
+
+      <!-- Google Sheets Integration -->
+      <div class="panel">
+        <h3>🔗 Google Sheets Integration</h3>
+        <p class="subtitle">अपना Google Apps Script URL यहाँ डालें। Data automatically sheet में save होगा।</p>
+
+        <div class="form-row">
+          <div class="form-group" style="flex:2;min-width:280px">
+            <label>Apps Script Web App URL</label>
+            <input id="scriptUrl" class="input" placeholder="https://script.google.com/macros/s/…/exec">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Registrations Sheet Name</label>
+            <input id="regSheetName" class="input" placeholder="Registrations" value="Registrations">
+          </div>
+          <div class="form-group">
+            <label>Payments Sheet Name</label>
+            <input id="paySheetName" class="input" placeholder="Payments" value="Payments">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="saveSheetConfig()">💾 Save Config</button>
+          <button class="btn" onclick="testSheetConnection()">🔌 Test Connection</button>
+          <button class="btn warn" onclick="syncFromSheet()">🔄 Sync From Sheet</button>
+        </div>
+        <div id="sheetSyncStatus" style="margin-top:10px;font-size:13px;font-weight:600;padding:8px 12px;border-radius:8px;display:none"></div>
+
+        <!-- Apps Script Setup Instructions -->
+        <div style="margin-top:20px;padding:14px;background:#f8fafc;border-radius:10px;border:1px solid var(--border)">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)">📋 Setup Instructions</div>
+          <ol style="font-size:12px;color:var(--muted);padding-left:18px;line-height:1.9">
+            <li>Google Sheets में <strong>Extensions → Apps Script</strong> खोलें</li>
+            <li>नीचे दिया <strong>Code.gs</strong> copy करके paste करें</li>
+            <li><strong>Deploy → New deployment → Web App</strong> करें</li>
+            <li>"Execute as: Me" और "Who has access: Anyone" select करें</li>
+            <li>Deploy होने पर मिला URL यहाँ paste करें</li>
+          </ol>
+          <button class="btn sm primary" style="margin-top:10px" onclick="document.getElementById('appsScriptCode').classList.toggle('hidden')">📄 Code.gs देखें / छुपाएं</button>
+          <pre id="appsScriptCode" class="hidden" style="margin-top:10px;background:#0f172a;color:#a5f3c0;padding:14px;border-radius:8px;font-size:11px;overflow-x:auto;white-space:pre;line-height:1.6">const SS_ID = '1sUWr2hjU2taHlT5PZL4Lut8IZYgAIWD_i3mVUGgE3YU';
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.openById(SS_ID);
+    const RS = body.regSheet || 'Registrations';
+    const PS = body.paySheet || 'Payments';
+
+    if (body.action === 'addRegistration') {
+      const d = body.data;
+      ss.getSheetByName(RS).appendRow([
+        new Date().toISOString(), d.regNo, d.name,
+        d.phone, d.notes||'', d.course, d.amount, '', d.trainer, d.id
+      ]);
+      return ok();
+    }
+    if (body.action === 'updateInvoiceNo') {
+      const sheet = ss.getSheetByName(RS);
+      const vals = sheet.getDataRange().getValues();
+      for (let i = 1; i < vals.length; i++) {
+        if (vals[i][9] == body.data.hash) {
+          sheet.getRange(i+1, 8).setValue(body.data.invNo); break;
+        }
+      }
+      return ok();
+    }
+    if (body.action === 'addPayment') {
+      const d = body.data;
+      ss.getSheetByName(PS).appendRow([
+        new Date().toISOString(), d.invNo, d.regNo, d.invNo,
+        d.course, d.amount, d.paymentMode, d.name, d.trainer, d.notes||''
+      ]);
+      return ok();
+    }
+    if (body.action === 'deleteRegistration') {
+      const sheet = ss.getSheetByName(RS);
+      const vals = sheet.getDataRange().getValues();
+      for (let i = 1; i < vals.length; i++) {
+        if (vals[i][9] == body.data.hash) { sheet.deleteRow(i+1); break; }
+      }
+      return ok();
+    }
+    return err('Unknown action');
+  } catch(e) { return err(e.toString()); }
+}
+
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.openById(SS_ID);
+    const RS = e.parameter.regSheet || 'Registrations';
+    const PS = e.parameter.paySheet || 'Payments';
+    const rSheet = ss.getSheetByName(RS);
+    const pSheet = ss.getSheetByName(PS);
+    return ContentService.createTextOutput(JSON.stringify({
+      ok: true,
+      regs: rSheet ? rSheet.getDataRange().getValues() : [],
+      pays: pSheet ? pSheet.getDataRange().getValues() : []
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch(e) { return err(e.toString()); }
+}
+
+function ok(d){ return ContentService.createTextOutput(
+  JSON.stringify({ok:true,...(d||{})})).setMimeType(ContentService.MimeType.JSON); }
+function err(m){ return ContentService.createTextOutput(
+  JSON.stringify({ok:false,error:m})).setMimeType(ContentService.MimeType.JSON); }</pre>
+        </div>
+      </div>
+
+      <!-- Logo -->
+      <div class="panel">
+        <h3>🖼️ Logo Upload</h3>
+        <input type="file" accept="image/*" id="logoUpload" onchange="uploadLogoLocal(event)" class="input" style="padding:8px">
+        <div style="margin-top:12px">
+          <img id="logoPreview" style="max-height:100px;border-radius:10px;border:1px solid var(--border);display:none">
+        </div>
+        <div class="btn-row" style="margin-top:16px">
+          <button class="btn danger" onclick="clearAllData()">🗑️ Clear ALL Data</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══ LOGIN MODAL ═══ -->
+<div id="loginModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:48px">🧘</div>
+      <h2>Admin Login</h2>
+      <p class="subtitle">Maa Narmada Yoga Bhopal — Admin Panel</p>
+    </div>
+    <div class="field">
+      <label>Username</label>
+      <input id="loginUser" class="input" type="text" placeholder="Enter username" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="loginPass" class="input" type="password" placeholder="Enter password" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <div class="modal-footer">
+      <button class="btn primary" onclick="doLogin()" style="width:100%;padding:12px">🔐 Sign In</button>
+    </div>
+    <div id="loginMsg" class="error-msg"></div>
+    <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--muted)">
+      Default: admin / admin123
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAYMENT VERIFY MODAL ═══ -->
+<div id="payVerifyModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>✅ Payment Verify करें</h2>
+    <p class="subtitle">Payment details fill करें — Sheet में automatically record होगा।</p>
+    <input type="hidden" id="pv_invId">
+    <div class="field">
+      <label>Invoice No</label>
+      <input id="pv_invNo" class="input" readonly style="background:#f0f7f4;color:var(--muted)">
+    </div>
+    <div style="display:flex;gap:10px">
+      <div class="field" style="flex:1">
+        <label>Payment Mode</label>
+        <select id="pv_mode" class="input">
+          <option value="Cash">💵 Cash</option>
+          <option value="Online">📱 Online / UPI</option>
+          <option value="Card">💳 Card</option>
+          <option value="Cheque">🏦 Cheque</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1">
+        <label>Month</label>
+        <input id="pv_month" class="input" placeholder="e.g. June 2025">
+      </div>
+    </div>
+    <div class="field">
+      <label>Paid By (optional)</label>
+      <input id="pv_paidby" class="input" placeholder="Student Name auto-fill">
+    </div>
+    <div class="field">
+      <label>Notes (optional)</label>
+      <input id="pv_notes" class="input" placeholder="Any remarks...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closePayVerifyModal()">Cancel</button>
+      <button class="btn primary" onclick="confirmVerify()">✅ Verify & Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EDIT USER MODAL ═══ -->
+<div id="editUserModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>✏️ Edit User</h2>
+    <p class="subtitle">User details update करें।</p>
+    <input type="hidden" id="edit_user_id">
+    <div class="field">
+      <label>Username</label>
+      <input id="edit_user_username" class="input" placeholder="username" readonly style="background:#f0f7f4;color:var(--muted)">
+    </div>
+    <div class="field">
+      <label>Display Name</label>
+      <input id="edit_user_display" class="input" placeholder="Full Name">
+    </div>
+    <div class="field">
+      <label>New Password (खाली छोड़ें अगर change नहीं करना)</label>
+      <input id="edit_user_pass" class="input" type="password" placeholder="••••••">
+    </div>
+    <div class="field">
+      <label>Role</label>
+      <select id="edit_user_role" class="input">
+        <option value="trainer">🧘 Trainer</option>
+        <option value="admin">🔑 Admin</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEditUserModal()">Cancel</button>
+      <button class="btn primary" onclick="saveEditUser()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCRIPT ═══ -->
+<script>
+/* ─────────── DATA LAYER (localStorage) ─────────── */
+const DB = {
+  get(key){ try{ return JSON.parse(localStorage.getItem('mn_'+key)||'null'); }catch(e){ return null; } },
+  set(key,val){ localStorage.setItem('mn_'+key, JSON.stringify(val)); },
+  del(key){ localStorage.removeItem('mn_'+key); }
+};
+
+function getUsers(){ return DB.get('users') || [{ id:'u1', username:'admin', displayName:'Admin', password:btoa('admin123'), role:'admin', createdAt: new Date().toISOString() }]; }
+function saveUsers(u){ DB.set('users',u); }
+function getRegs(){ return DB.get('regs') || []; }
+function saveRegs(r){ DB.set('regs',r); }
+function getInvoices(){ return DB.get('invoices') || []; }
+function saveInvoices(i){ DB.set('invoices',i); }
+function getAudit(){ return DB.get('audit') || []; }
+function addAudit(actor,action,details){
+  const log = getAudit();
+  log.unshift({ id:uid(), actor, action, details, createdAt: new Date().toISOString() });
+  DB.set('audit', log.slice(0,200));
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ─────────── SESSION ─────────── */
+let session = null;
+try{ session = JSON.parse(sessionStorage.getItem('mn_session')||'null'); }catch(e){}
+
+function isAdmin(){ return session && session.role === 'admin'; }
+
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  document.getElementById('loginMsg').textContent='';
+  if(!u||!p){ document.getElementById('loginMsg').textContent='Username और password डालें।'; return; }
+  const users = getUsers();
+  const user = users.find(x => x.username===u && (x.password === btoa(p) || (x.password===p && !x.password.startsWith('='))));
+  if(!user){ document.getElementById('loginMsg').textContent='गलत username या password।'; return; }
+  session = { username: user.username, displayName: user.displayName, role: user.role };
+  sessionStorage.setItem('mn_session', JSON.stringify(session));
+  addAudit(user.displayName||user.username, 'LOGIN', 'User logged in');
+  document.getElementById('loginModal').classList.add('hidden');
+  document.getElementById('userLabel').textContent = session.displayName || session.username;
+  initApp();
+}
+
+function logout(){
+  if(session) addAudit(session.displayName||session.username, 'LOGOUT', 'User logged out');
+  sessionStorage.removeItem('mn_session');
+  location.reload();
+}
+
+/* ─────────── INIT ─────────── */
+function initApp(){
+  document.getElementById('userLabel').textContent = session ? (session.displayName||session.username) : '—';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('reg_date').value = today;
+  const savedLogo = DB.get('logo');
+  if(savedLogo){ document.getElementById('headerLogo').src = savedLogo; document.getElementById('logoPreview').src = savedLogo; document.getElementById('logoPreview').style.display='block'; }
+  // Load sheet config into settings fields
+  const cfg = getSheetConfig();
+  const su = document.getElementById('scriptUrl');
+  const rs = document.getElementById('regSheetName');
+  const ps = document.getElementById('paySheetName');
+  if(su) su.value = cfg.url;
+  if(rs) rs.value = cfg.regSheet;
+  if(ps) ps.value = cfg.paySheet;
+  renderRegsList(); renderGenList(); renderVerifyList(); renderReports(); renderUsers(); renderAudit();
+  showSection('newReg');
+  setInterval(()=>{ document.getElementById('currentTime').textContent = new Date().toLocaleString('hi-IN'); }, 1000);
+}
+
+/* ─────────── UI ─────────── */
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const el = document.getElementById('nav-'+id);
+  if(el) el.classList.add('active');
+  closeSidebar();
+}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+
+/* ─────────── REGISTRATIONS ─────────── */
+function createRegistration(){
+  const name = document.getElementById('reg_name').value.trim();
+  if(!name){ alert('Student का naam zaruri hai!'); return; }
+  const regs = getRegs();
+  let regNo = document.getElementById('reg_regNo').value.trim();
+  if(!regNo){
+    const count = regs.length + 1;
+    regNo = 'REG' + String(count).padStart(3,'0');
+  }
+  if(regs.find(r=>r.regNo===regNo)){ alert('यह Reg No पहले से exist करता है।'); return; }
+  const reg = {
+    id: uid(), regNo, name,
+    phone: document.getElementById('reg_phone').value.trim(),
+    course: document.getElementById('reg_course').value.trim(),
+    amount: Number(document.getElementById('reg_amount').value)||0,
+    trainer: document.getElementById('reg_trainer').value.trim(),
+    date: document.getElementById('reg_date').value,
+    notes: document.getElementById('reg_notes').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  regs.push(reg);
+  saveRegs(regs);
+  addAudit(session?.displayName||'admin','REG_CREATE', `${reg.regNo} - ${reg.name}`);
+  pushToSheet('addRegistration', reg);
+  clearRegForm();
+  renderRegsList(); renderGenList(); renderReports();
+  showToast('✅ Registration saved: ' + reg.regNo);
+}
+
+function clearRegForm(){
+  ['reg_regNo','reg_name','reg_phone','reg_course','reg_amount','reg_trainer','reg_notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('reg_date').value = new Date().toISOString().split('T')[0];
+}
+
+function renderRegsList(){
+  const q = (document.getElementById('reg_search')?.value||'').toLowerCase();
+  const regs = getRegs().filter(r=>!q||r.name.toLowerCase().includes(q)||r.regNo.toLowerCase().includes(q));
+  if(!regs.length){ document.getElementById('regsListContainer').innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted)">कोई registration नहीं मिली।</div>'; return; }
+  let html = '<div class="table-wrap"><table><thead><tr><th>Reg No</th><th>Name</th><th>Course</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+  regs.forEach(r=>{
+    html += `<tr>
+      <td><strong>${r.regNo}</strong></td>
+      <td>${r.name}<br><span style="font-size:11px;color:var(--muted)">${r.phone||''}</span></td>
+      <td>${r.course||'-'}</td>
+      <td>₹ ${r.amount.toLocaleString()}</td>
+      <td>${r.date||''}</td>
+      <td style="white-space:nowrap">
+        <button class="btn sm primary" onclick="generateInvoiceFor('${r.id}')">🧾</button>
+        <button class="btn sm" onclick="editReg('${r.id}')">✏️</button>
+        <button class="btn sm danger" onclick="deleteReg('${r.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('regsListContainer').innerHTML = html;
+}
+
+function editReg(id){
+  const r = getRegs().find(x=>x.id===id); if(!r) return;
+  document.getElementById('reg_regNo').value=r.regNo; document.getElementById('reg_name').value=r.name;
+  document.getElementById('reg_phone').value=r.phone||''; document.getElementById('reg_course').value=r.course||'';
+  document.getElementById('reg_amount').value=r.amount; document.getElementById('reg_trainer').value=r.trainer||'';
+  document.getElementById('reg_date').value=r.date||''; document.getElementById('reg_notes').value=r.notes||'';
+  deleteReg(id, true);
+  showSection('newReg'); window.scrollTo(0,0);
+}
+
+function deleteReg(id, silent=false){
+  if(!silent && !confirm('यह registration delete करना है?')) return;
+  const reg = getRegs().find(x=>x.id===id);
+  const regs = getRegs().filter(x=>x.id!==id);
+  saveRegs(regs);
+  const invs = getInvoices().filter(x=>x.regId!==id);
+  saveInvoices(invs);
+  addAudit(session?.displayName||'admin','REG_DELETE',id);
+  if(reg && !silent) pushToSheet('deleteRegistration', {hash: id});
+  renderRegsList(); renderGenList(); renderVerifyList(); renderReports();
+}
+
+/* ─────────── INVOICES ─────────── */
+function renderGenList(){
+  const q = (document.getElementById('gen_search')?.value||'').toLowerCase();
+  const regs = getRegs().filter(r=>!q||r.name.toLowerCase().includes(q)||r.regNo.toLowerCase().includes(q));
+  if(!regs.length){ document.getElementById('genList').innerHTML='<div style="text-align:center;padding:24px;color:var(--muted)">कोई record नहीं।</div>'; return; }
+  let html = '<div class="table-wrap"><table><thead><tr><th>Reg No</th><th>Name</th><th>Course</th><th>Amount</th><th>Invoice</th><th>Action</th></tr></thead><tbody>';
+  const invs = getInvoices();
+  regs.forEach(r=>{
+    const inv = invs.find(i=>i.regId===r.id);
+    html += `<tr>
+      <td><strong>${r.regNo}</strong></td>
+      <td>${r.name}</td>
+      <td>${r.course||'-'}</td>
+      <td>₹ ${r.amount.toLocaleString()}</td>
+      <td>${inv ? `<span class="badge green">${inv.invNo}</span>` : '<span class="badge orange">Pending</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn sm primary" onclick="generateInvoiceFor('${r.id}')">${inv?'Re-generate':'Generate'}</button>
+        ${inv ? `<button class="btn sm" onclick="previewInvoice('${r.id}')">Preview</button>` : ''}
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('genList').innerHTML = html;
+}
+
+function generateInvoiceFor(regId){
+  const r = getRegs().find(x=>x.id===regId); if(!r) return;
+  const invs = getInvoices();
+  const existing = invs.find(i=>i.regId===regId);
+  const invNo = existing ? existing.invNo : 'INV' + String(invs.length+1).padStart(4,'0') + '-' + new Date().getFullYear();
+  const inv = { id: existing?.id||uid(), invNo, regId, name:r.name, amount:r.amount, verified:existing?.verified||false, createdAt: existing?.createdAt||new Date().toISOString() };
+  const newInvs = invs.filter(i=>i.regId!==regId);
+  newInvs.push(inv);
+  saveInvoices(newInvs);
+  addAudit(session?.displayName||'admin','INV_GENERATE', `${invNo} for ${r.name}`);
+  pushToSheet('updateInvoiceNo', {hash: r.id, invNo});
+  renderGenList(); renderVerifyList(); renderReports();
+  previewInvoice(regId);
+  showToast('🧾 Invoice generated: ' + invNo);
+}
+
+function previewInvoice(regId){
+  const r = getRegs().find(x=>x.id===regId);
+  if(!r){ document.getElementById('invoicePreviewArea').innerHTML=''; return; }
+  const inv = getInvoices().find(i=>i.regId===regId);
+  const logoSrc = DB.get('logo') || '';
+  const logoHTML = logoSrc ? `<img src="${logoSrc}" style="height:70px;border-radius:10px;margin-bottom:8px" alt="Logo">` : '<div style="font-size:48px;margin-bottom:8px">🧘</div>';
+
+  /* Watermark: logo if available, else text — centered with higher opacity */
+  const watermarkEl = logoSrc
+    ? `<img class="invoice-watermark-logo" src="${logoSrc}" alt="">`
+    : `<div class="invoice-watermark">मां नर्मदा<br>योग</div>`;
+
+  const html = `
+  <div id="invoicePreview" class="invoice-card">
+    ${watermarkEl}
+    <div class="invoice-header">
+      ${logoHTML}
+      <h2>Maa Narmada Yoga Bhopal</h2>
+      <p>📞 7415602011 | www.maanarmadayoga.com</p>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Official Receipt</div>
+    </div>
+    <table class="invoice-table">
+      <tr><td>Invoice No</td><td>${inv ? inv.invNo : '(Not Generated)'}</td></tr>
+      <tr><td>Date</td><td>${new Date().toLocaleDateString('hi-IN')}</td></tr>
+      <tr><td>Student Name</td><td>${r.name}</td></tr>
+      <tr><td>Reg Number</td><td>${r.regNo}</td></tr>
+      <tr><td>Phone</td><td>${r.phone||'-'}</td></tr>
+      <tr><td>Course</td><td>${r.course||'-'}</td></tr>
+      <tr><td>Trainer</td><td>${r.trainer||'-'}</td></tr>
+      <tr><td>Status</td><td>${inv&&inv.verified ? '<span class="badge green">✅ Verified</span>' : '<span class="badge orange">⏳ Pending</span>'}</td></tr>
+    </table>
+    <div class="invoice-total">
+      <span>Total Amount</span>
+      <span>₹ ${(inv?inv.amount:r.amount).toLocaleString()}</span>
+    </div>
+    <div class="invoice-footer">
+      धन्यवाद! Thank you for joining Maa Narmada Yoga Bhopal.<br>
+      यह receipt आपके record के लिए है।
+    </div>
+    <div class="btn-row" style="margin-top:16px;justify-content:center">
+      <button class="btn primary" onclick="downloadInvoicePDF('${regId}')">⬇️ PDF Download</button>
+      <button class="btn" onclick="downloadInvoiceImage('${regId}')">🖼️ Image</button>
+      <button class="btn warn" onclick="shareWhatsApp('${regId}')">💬 WhatsApp</button>
+    </div>
+  </div>`;
+  document.getElementById('invoicePreviewArea').innerHTML = html;
+  document.getElementById('invoicePreviewArea').scrollIntoView({behavior:'smooth'});
+  showSection('generate');
+}
+
+/* ─────────── VERIFY ─────────── */
+function renderVerifyList(){
+  const invs = getInvoices();
+  if(!invs.length){ document.getElementById('verifyList').innerHTML='<div style="text-align:center;padding:24px;color:var(--muted)">कोई invoice नहीं।</div>'; return; }
+  let html = '<div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Name</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  invs.forEach(inv=>{
+    html += `<tr>
+      <td><strong>${inv.invNo}</strong></td>
+      <td>${inv.name}</td>
+      <td>₹ ${inv.amount.toLocaleString()}</td>
+      <td>${inv.verified ? '<span class="badge green">✅ Verified</span>' : '<span class="badge orange">⏳ Pending</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn sm ${inv.verified?'warn':'primary'}" onclick="toggleVerify('${inv.id}')">${inv.verified?'Unverify':'✅ Verify'}</button>
+        <button class="btn sm" onclick="previewInvoice('${inv.regId}')">👁️ Preview</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('verifyList').innerHTML = html;
+}
+
+function toggleVerify(id){
+  const invs = getInvoices();
+  const inv = invs.find(i=>i.id===id); if(!inv) return;
+  if(inv.verified){
+    // Unverify — direct, no modal
+    inv.verified = false;
+    saveInvoices(invs);
+    addAudit(session?.displayName||'admin','INV_UNVERIFY', inv.invNo);
+    renderVerifyList(); renderReports();
+    showToast('⚠️ Invoice unverified');
+  } else {
+    // Verify — open payment modal
+    openPayVerifyModal(id);
+  }
+}
+
+function openPayVerifyModal(invId){
+  const inv = getInvoices().find(i=>i.id===invId); if(!inv) return;
+  const reg = getRegs().find(r=>r.id===inv.regId);
+  document.getElementById('pv_invId').value = invId;
+  document.getElementById('pv_invNo').value = inv.invNo;
+  document.getElementById('pv_paidby').value = inv.name || '';
+  document.getElementById('pv_month').value = reg?.course || '';
+  document.getElementById('pv_notes').value = '';
+  document.getElementById('pv_mode').value = 'Cash';
+  document.getElementById('payVerifyModal').classList.remove('hidden');
+}
+
+function closePayVerifyModal(){
+  document.getElementById('payVerifyModal').classList.add('hidden');
+}
+
+function confirmVerify(){
+  const invId = document.getElementById('pv_invId').value;
+  const paymentMode = document.getElementById('pv_mode').value;
+  const month = document.getElementById('pv_month').value.trim();
+  const paidBy = document.getElementById('pv_paidby').value.trim();
+  const notes = document.getElementById('pv_notes').value.trim();
+
+  const invs = getInvoices();
+  const inv = invs.find(i=>i.id===invId); if(!inv) return;
+  const reg = getRegs().find(r=>r.id===inv.regId);
+
+  inv.verified = true;
+  inv.paymentMode = paymentMode;
+  saveInvoices(invs);
+  addAudit(session?.displayName||'admin','INV_VERIFY', `${inv.invNo} [${paymentMode}]`);
+
+  // Push payment to sheet
+  pushToSheet('addPayment', {
+    invNo: inv.invNo,
+    regNo: reg?.regNo || '',
+    course: month || reg?.course || '',
+    amount: inv.amount,
+    paymentMode,
+    name: paidBy || inv.name,
+    trainer: reg?.trainer || '',
+    notes
+  });
+
+  closePayVerifyModal();
+  renderVerifyList(); renderReports();
+  showToast('✅ Payment verified & saved to Sheet!');
+}
+
+/* ─────────── REPORTS ─────────── */
+function renderReports(){
+  const regs = getRegs();
+  const invs = getInvoices();
+  const totalAmount = invs.reduce((s,i)=>s+i.amount,0);
+  const verified = invs.filter(i=>i.verified).length;
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total Registrations</div>
+      <div class="stat-value">${regs.length}</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">Total Collected</div>
+      <div class="stat-value">₹${totalAmount.toLocaleString()}</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Verified Invoices</div>
+      <div class="stat-value">${verified}/${invs.length}</div>
+    </div>
+  `;
+}
+
+function renderReportTable(){
+  const regs = getRegs();
+  const invs = getInvoices();
+  let html = '<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Reg No</th><th>Name</th><th>Course</th><th>Invoice No</th><th>Amount</th><th>Verified</th><th>Date</th></tr></thead><tbody>';
+  regs.forEach(r=>{
+    const inv = invs.find(i=>i.regId===r.id);
+    html += `<tr>
+      <td>${r.regNo}</td>
+      <td>${r.name}<br><small style="color:var(--muted)">${r.phone||''}</small></td>
+      <td>${r.course||'-'}</td>
+      <td>${inv?`<span class="badge green">${inv.invNo}</span>`:'<span class="badge orange">-</span>'}</td>
+      <td>₹ ${(inv?inv.amount:r.amount).toLocaleString()}</td>
+      <td>${inv&&inv.verified?'<span class="badge green">Yes</span>':'<span class="badge orange">No</span>'}</td>
+      <td>${r.date||new Date(r.createdAt).toLocaleDateString()}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('reportTable').innerHTML = html;
+}
+
+function downloadCSV(){
+  const regs = getRegs(); const invs = getInvoices();
+  const rows = [['Reg No','Name','Phone','Course','Trainer','Amount','Invoice No','Verified','Date']];
+  regs.forEach(r=>{
+    const inv = invs.find(i=>i.regId===r.id);
+    rows.push([r.regNo, r.name, r.phone||'', r.course||'', r.trainer||'', inv?inv.amount:r.amount, inv?inv.invNo:'', inv&&inv.verified?'Yes':'No', r.date||new Date(r.createdAt).toLocaleDateString()]);
+  });
+  const csv = rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='mn_yoga_report_'+new Date().toISOString().split('T')[0]+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('📊 CSV exported!');
+}
+
+/* ─────────── USERS ─────────── */
+function createUser(){
+  if(!isAdmin()){ showToast('❌ केवल Admin यह action कर सकता है','error'); return; }
+  const username = document.getElementById('new_user').value.trim();
+  const display = document.getElementById('new_user_display').value.trim();
+  const pass = document.getElementById('new_user_pass').value;
+  if(!username||!pass){ showToast('❌ Username और password required','error'); return; }
+  const users = getUsers();
+  if(users.find(u=>u.username===username)){ showToast('❌ यह username पहले से exists करता है','error'); return; }
+  const selectedRole = document.getElementById('new_user_role').value || 'trainer';
+  users.push({ id:uid(), username, displayName:display||username, password:btoa(pass), role:selectedRole, createdAt: new Date().toISOString() });
+  saveUsers(users);
+  addAudit(session?.displayName||'admin','USER_CREATE', `${username} (${selectedRole})`);
+  document.getElementById('new_user').value=''; document.getElementById('new_user_display').value=''; document.getElementById('new_user_pass').value=''; document.getElementById('new_user_role').value='trainer';
+  renderUsers();
+  showToast('✅ User created: ' + username);
+}
+
+function renderUsers(){
+  const users = getUsers();
+  const admin = isAdmin();
+
+  /* Hide "Create User" section for non-admins */
+  const createSection = document.getElementById('adminOnlyUserCreate');
+  if(createSection) createSection.style.display = admin ? '' : 'none';
+
+  let html = '<div class="table-wrap"><table><thead><tr><th>Username</th><th>Display Name</th><th>Role</th><th>Created</th>';
+  if(admin) html += '<th>Actions</th>';
+  html += '</tr></thead><tbody>';
+
+  users.forEach(u=>{
+    html += `<tr>
+      <td>${u.username}</td>
+      <td>${u.displayName||'-'}</td>
+      <td><span class="badge ${u.role==='admin'?'green':'orange'}">${u.role==='admin'?'🔑 Admin':'🧘 Trainer'}</span></td>
+      <td>${new Date(u.createdAt).toLocaleDateString()}</td>`;
+    if(admin){
+      /* Cannot delete the currently-logged-in user */
+      const isSelf = u.username === session?.username;
+      html += `<td style="white-space:nowrap">
+        <button class="btn sm primary" onclick="openEditUserModal('${u.id}')">✏️ Edit</button>
+        <button class="btn sm danger" onclick="deleteUser('${u.id}')" ${isSelf?'disabled title="खुद को delete नहीं कर सकते"':''}>🗑️</button>
+      </td>`;
+    }
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('usersList').innerHTML = html;
+}
+
+/* ── Edit User Modal ── */
+function openEditUserModal(userId){
+  if(!isAdmin()){ showToast('❌ केवल Admin यह action कर सकता है','error'); return; }
+  const u = getUsers().find(x=>x.id===userId); if(!u) return;
+  document.getElementById('edit_user_id').value = u.id;
+  document.getElementById('edit_user_username').value = u.username;
+  document.getElementById('edit_user_display').value = u.displayName||'';
+  document.getElementById('edit_user_pass').value = '';
+  document.getElementById('edit_user_role').value = u.role || 'trainer';
+  document.getElementById('editUserModal').classList.remove('hidden');
+}
+
+function closeEditUserModal(){
+  document.getElementById('editUserModal').classList.add('hidden');
+}
+
+function saveEditUser(){
+  if(!isAdmin()){ showToast('❌ केवल Admin यह action कर सकता है','error'); return; }
+  const id = document.getElementById('edit_user_id').value;
+  const display = document.getElementById('edit_user_display').value.trim();
+  const newPass = document.getElementById('edit_user_pass').value;
+  const newRole = document.getElementById('edit_user_role').value;
+  const users = getUsers();
+  const u = users.find(x=>x.id===id); if(!u) return;
+  u.displayName = display || u.displayName;
+  if(newPass) u.password = btoa(newPass);
+  /* Prevent demoting self from admin */
+  if(u.username === session?.username && newRole !== 'admin'){
+    showToast('❌ खुद का role Admin से नीचे नहीं कर सकते','error'); return;
+  }
+  u.role = newRole;
+  saveUsers(users);
+  addAudit(session?.displayName||'admin','USER_EDIT', u.username);
+  closeEditUserModal();
+  renderUsers();
+  showToast('✅ User updated: ' + u.username);
+}
+
+/* ── Delete User ── */
+function deleteUser(userId){
+  if(!isAdmin()){ showToast('❌ केवल Admin यह action कर सकता है','error'); return; }
+  const users = getUsers();
+  const u = users.find(x=>x.id===userId); if(!u) return;
+  if(u.username === session?.username){ showToast('❌ खुद को delete नहीं कर सकते','error'); return; }
+  if(!confirm(`"${u.displayName||u.username}" को delete करना है?`)) return;
+  saveUsers(users.filter(x=>x.id!==userId));
+  addAudit(session?.displayName||'admin','USER_DELETE', u.username);
+  renderUsers();
+  showToast('✅ User deleted: ' + u.username);
+}
+
+function changePassword(){
+  const username = document.getElementById('cp_user').value.trim();
+  const oldP = document.getElementById('cp_old').value;
+  const newP = document.getElementById('cp_new').value;
+  if(!username||!newP){ showToast('❌ Username और new password required','error'); return; }
+  /* Non-admin can only change their own password */
+  if(!isAdmin() && username !== session?.username){ showToast('❌ आप केवल अपना password बदल सकते हैं','error'); return; }
+  const users = getUsers();
+  const u = users.find(x=>x.username===username);
+  if(!u){ showToast('❌ User not found','error'); return; }
+  if(oldP && u.password !== btoa(oldP)){ showToast('❌ Old password गलत है','error'); return; }
+  u.password = btoa(newP);
+  saveUsers(users);
+  addAudit(session?.displayName||'admin','PASS_CHANGE', username);
+  document.getElementById('cp_user').value=''; document.getElementById('cp_old').value=''; document.getElementById('cp_new').value='';
+  showToast('✅ Password changed!');
+}
+
+/* ─────────── AUDIT ─────────── */
+function renderAudit(){
+  const logs = getAudit();
+  if(!logs.length){ document.getElementById('auditList').innerHTML='<div style="text-align:center;padding:24px;color:var(--muted)">कोई audit log नहीं।</div>'; return; }
+  let html = '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Details</th></tr></thead><tbody>';
+  logs.forEach(l=>{
+    html += `<tr><td>${new Date(l.createdAt).toLocaleString()}</td><td>${l.actor}</td><td><span class="badge ${l.action.includes('DELETE')||l.action.includes('LOGOUT')?'orange':'green'}">${l.action}</span></td><td>${l.details}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('auditList').innerHTML = html;
+}
+
+/* ─────────── LOGO ─────────── */
+function uploadLogoLocal(e){
+  const f = e.target.files&&e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const data = ev.target.result;
+    DB.set('logo', data);
+    document.getElementById('headerLogo').src = data;
+    document.getElementById('logoPreview').src = data;
+    document.getElementById('logoPreview').style.display = 'block';
+    showToast('✅ Logo uploaded!');
+  };
+  reader.readAsDataURL(f);
+}
+
+/* ─────────── PDF / IMAGE ─────────── */
+async function downloadInvoicePDF(regId){
+  const area = document.getElementById('invoicePreview');
+  if(!area){ showToast('❌ Preview not found','error'); return; }
+  try{
+    const canvas = await html2canvas(area,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    const imgData = canvas.toDataURL('image/png');
+    const {jsPDF} = window.jspdf;
+    const pdf = new jsPDF({unit:'px',format:[canvas.width/2,canvas.height/2]});
+    pdf.addImage(imgData,'PNG',0,0,canvas.width/2,canvas.height/2);
+    const inv = getInvoices().find(i=>i.regId===regId);
+    pdf.save((inv?inv.invNo:'invoice')+'.pdf');
+    showToast('✅ PDF downloaded!');
+  }catch(e){ console.error(e); showToast('❌ PDF export failed','error'); }
+}
+
+async function downloadInvoiceImage(regId){
+  const area = document.getElementById('invoicePreview'); if(!area) return;
+  try{
+    const canvas = await html2canvas(area,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    const a = document.createElement('a');
+    const inv = getInvoices().find(i=>i.regId===regId);
+    a.href = canvas.toDataURL('image/png');
+    a.download = (inv?inv.invNo:'invoice')+'.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    showToast('✅ Image downloaded!');
+  }catch(e){ showToast('❌ Image export failed','error'); }
+}
+
+function shareWhatsApp(regId){
+  const r = getRegs().find(x=>x.id===regId); if(!r) return;
+  const inv = getInvoices().find(i=>i.regId===regId);
+  const text = `🙏 *Maa Narmada Yoga Bhopal*\n\n📋 *Receipt*\n` +
+    `Invoice: ${inv?inv.invNo:'-'}\n` +
+    `Name: ${r.name}\n` +
+    `Course: ${r.course||'-'}\n` +
+    `Amount: ₹${(inv?inv.amount:r.amount).toLocaleString()}\n` +
+    `Reg No: ${r.regNo}\n` +
+    `Status: ${inv&&inv.verified?'✅ Verified':'⏳ Pending'}\n\n` +
+    `📞 7415602011`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+/* ─────────── GOOGLE SHEETS ─────────── */
+function getSheetConfig(){
+  return {
+    url: DB.get('scriptUrl') || '',
+    regSheet: DB.get('regSheetName') || 'Registrations',
+    paySheet: DB.get('paySheetName') || 'Payments'
+  };
+}
+
+function saveSheetConfig(){
+  const url = document.getElementById('scriptUrl').value.trim();
+  const rs = document.getElementById('regSheetName').value.trim() || 'Registrations';
+  const ps = document.getElementById('paySheetName').value.trim() || 'Payments';
+  DB.set('scriptUrl', url);
+  DB.set('regSheetName', rs);
+  DB.set('paySheetName', ps);
+  showToast('✅ Sheet config saved!');
+  setSyncStatus('💾 Config saved!', 'green');
+}
+
+function setSyncStatus(msg, color='green'){
+  const el = document.getElementById('sheetSyncStatus');
+  if(!el) return;
+  el.style.display = 'block';
+  el.style.background = color==='green' ? '#e6f9f0' : color==='red' ? '#fdecea' : '#fff3e0';
+  el.style.color = color==='green' ? '#0a7d44' : color==='red' ? '#c62828' : '#e65c00';
+  el.textContent = msg;
+}
+
+async function pushToSheet(action, data){
+  const cfg = getSheetConfig();
+  if(!cfg.url){ return; } // silently skip if not configured
+  try{
+    const resp = await fetch(cfg.url, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ action, data, regSheet: cfg.regSheet, paySheet: cfg.paySheet })
+    });
+    // no-cors won't give readable response, but data gets sent
+  } catch(e){
+    console.warn('Sheet push failed:', e.message);
+  }
+}
+
+async function testSheetConnection(){
+  const cfg = getSheetConfig();
+  if(!cfg.url){ setSyncStatus('❌ Script URL नहीं है। पहले URL enter करें।','red'); return; }
+  setSyncStatus('⏳ Testing…','orange');
+  try{
+    const resp = await fetch(`${cfg.url}?action=getAll&regSheet=${encodeURIComponent(cfg.regSheet)}&paySheet=${encodeURIComponent(cfg.paySheet)}`);
+    const json = await resp.json();
+    if(json.ok){
+      const regCount = Math.max(0, (json.regs?.length||1)-1);
+      const payCount = Math.max(0, (json.pays?.length||1)-1);
+      setSyncStatus(`✅ Connected! Sheet में ${regCount} registrations, ${payCount} payments मिले।`,'green');
+    } else {
+      setSyncStatus('❌ Error: ' + (json.error||'Unknown'),'red');
+    }
+  } catch(e){
+    setSyncStatus('❌ Connection failed: ' + e.message,'red');
+  }
+}
+
+async function syncFromSheet(){
+  const cfg = getSheetConfig();
+  if(!cfg.url){ setSyncStatus('❌ Script URL नहीं है।','red'); return; }
+  setSyncStatus('⏳ Sheet से data load हो रहा है…','orange');
+  try{
+    const resp = await fetch(`${cfg.url}?action=getAll&regSheet=${encodeURIComponent(cfg.regSheet)}&paySheet=${encodeURIComponent(cfg.paySheet)}`);
+    const json = await resp.json();
+    if(!json.ok){ setSyncStatus('❌ ' + (json.error||'Failed'),'red'); return; }
+
+    // Parse Registrations: Timestamp,RegNo,Name,Mobile,Address,Course,Fee,InvoiceNo,Trainer,Hash
+    const regsFromSheet = [];
+    const rows = json.regs || [];
+    for(let i=1;i<rows.length;i++){
+      const r = rows[i];
+      if(!r[1]) continue; // skip empty rows
+      regsFromSheet.push({
+        id: r[9]||uid(), regNo:r[1], name:r[2], phone:r[3],
+        notes:r[4]||'', course:r[5], amount:Number(r[6])||0,
+        trainer:r[8]||'', date:'', createdAt: r[0]||new Date().toISOString()
+      });
+    }
+
+    // Parse Payments: Timestamp,PaymentId,RegNo,InvoiceNo,Month,Amount,PaymentMode,PaidBy,Trainer,Notes
+    const invFromSheet = [];
+    const prows = json.pays || [];
+    for(let i=1;i<prows.length;i++){
+      const p = prows[i];
+      if(!p[1]) continue;
+      const matchReg = regsFromSheet.find(r=>r.regNo===p[2]);
+      invFromSheet.push({
+        id: uid(), invNo:p[1]||p[3],
+        regId: matchReg?.id||'',
+        name: p[7], amount:Number(p[5])||0,
+        verified:true, paymentMode:p[6]||'Cash',
+        createdAt: p[0]||new Date().toISOString()
+      });
+    }
+
+    // Merge with existing local data (sheet data takes precedence)
+    const localRegs = getRegs();
+    const merged = [...regsFromSheet];
+    localRegs.forEach(lr=>{
+      if(!merged.find(m=>m.regNo===lr.regNo)) merged.push(lr);
+    });
+    saveRegs(merged);
+
+    const localInvs = getInvoices();
+    const mergedInv = [...invFromSheet];
+    localInvs.forEach(li=>{
+      if(!mergedInv.find(m=>m.invNo===li.invNo)) mergedInv.push(li);
+    });
+    saveInvoices(mergedInv);
+
+    renderRegsList(); renderGenList(); renderVerifyList(); renderReports();
+    setSyncStatus(`✅ Sync complete! ${merged.length} registrations, ${mergedInv.length} payments loaded.`,'green');
+    showToast('🔄 Sheet से sync हो गया!');
+  } catch(e){
+    setSyncStatus('❌ Sync failed: ' + e.message,'red');
+  }
+}
+
+/* ─────────── CLEAR ALL ─────────── */
+function clearAllData(){
+  if(!confirm('⚠️ सभी data delete हो जाएगा! क्या आप sure हैं?')) return;
+  if(!confirm('Last chance! सभी registrations और invoices permanently delete होंगे।')) return;
+  ['regs','invoices','audit','logo'].forEach(k=>DB.del(k));
+  location.reload();
+}
+
+/* ─────────── TOAST ─────────── */
+function showToast(msg, type='success'){
+  const t = document.createElement('div');
+  t.style.cssText = `
+    position:fixed;bottom:24px;right:24px;z-index:9999;
+    background:${type==='error'?'#e53935':'#0f9d58'};
+    color:#fff;padding:12px 20px;border-radius:12px;
+    font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    animation:slideIn 0.3s ease;
+    max-width:320px;
+  `;
+  t.textContent = msg;
+  const style = document.createElement('style');
+  style.textContent='@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}';
+  document.head.appendChild(style);
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+/* ─────────── BOOT ─────────── */
+window.addEventListener('load', ()=>{
+  if(session){
+    document.getElementById('userLabel').textContent = session.displayName||session.username;
+    initApp();
+  } else {
+    document.getElementById('loginModal').classList.remove('hidden');
+  }
+});
+</script>
+</body>
+</html>
