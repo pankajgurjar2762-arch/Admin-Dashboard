@@ -777,57 +777,102 @@ function err(m){ return ContentService.createTextOutput(
 <!-- ═══ SCRIPT ═══ -->
 <script>
 /* ══════════════════════════════════════════════════════════
-   STORAGE LAYER — works in localStorage, sessionStorage,
-   AND Google Sites iframes (falls back to in-memory).
+   STORAGE LAYER
+   Priority: localStorage → cookie-chunks → in-memory
+   Works in normal browsers AND Google Sites iframes.
    ══════════════════════════════════════════════════════════ */
 const _mem = {};
 
-function _tryLocal(method, key, val){
-  try {
-    if(method==='get') return localStorage.getItem(key);
-    if(method==='set') { localStorage.setItem(key, val); return true; }
-    if(method==='del') { localStorage.removeItem(key); return true; }
-  } catch(e){ return null; }
-  return null;
+/* ── Cookie helpers (max 3800 chars per cookie, chunked) ── */
+function _setCookie(name, val, days=365){
+  try{
+    const exp = new Date(Date.now()+days*864e5).toUTCString();
+    // chunk into 3500-char pieces
+    const chunks = [];
+    for(let i=0;i<val.length;i+=3500) chunks.push(val.slice(i,i+3500));
+    // delete old chunks first
+    for(let c=0;c<20;c++) document.cookie=`${name}_c${c}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+    if(chunks.length===1){
+      document.cookie=`${name}=${encodeURIComponent(val)};expires=${exp};path=/;SameSite=None;Secure`;
+    } else {
+      document.cookie=`${name}=__chunked_${chunks.length};expires=${exp};path=/;SameSite=None;Secure`;
+      chunks.forEach((ch,i)=>{
+        document.cookie=`${name}_c${i}=${encodeURIComponent(ch)};expires=${exp};path=/;SameSite=None;Secure`;
+      });
+    }
+  }catch(e){}
+}
+function _getCookie(name){
+  try{
+    const all = document.cookie.split(';').reduce((acc,c)=>{
+      const [k,v]=c.trim().split('='); if(k&&v) acc[k]=decodeURIComponent(v); return acc;
+    },{});
+    const base = all[name];
+    if(!base) return null;
+    if(base.startsWith('__chunked_')){
+      const n=parseInt(base.split('_')[2]);
+      let out='';
+      for(let i=0;i<n;i++) out+=(all[`${name}_c${i}`]||'');
+      return out;
+    }
+    return base;
+  }catch(e){ return null; }
+}
+function _delCookie(name){
+  try{
+    document.cookie=`${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+    for(let c=0;c<20;c++) document.cookie=`${name}_c${c}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+  }catch(e){}
 }
 
 const DB = {
   get(key){
-    try {
-      const raw = _tryLocal('get','mn_'+key) ?? _mem['mn_'+key] ?? null;
-      return raw ? JSON.parse(raw) : null;
-    } catch(e){ return null; }
+    const k = 'mn_'+key;
+    // 1. try localStorage
+    try{ const r=localStorage.getItem(k); if(r) return JSON.parse(r); }catch(e){}
+    // 2. try cookie
+    try{ const r=_getCookie(k); if(r) return JSON.parse(r); }catch(e){}
+    // 3. in-memory
+    try{ const r=_mem[k]; if(r) return JSON.parse(r); }catch(e){}
+    return null;
   },
   set(key,val){
-    const s = JSON.stringify(val);
-    if(!_tryLocal('set','mn_'+key,s)) _mem['mn_'+key] = s;
+    const k='mn_'+key, s=JSON.stringify(val);
+    let saved=false;
+    try{ localStorage.setItem(k,s); saved=true; }catch(e){}
+    try{ _setCookie(k,s); saved=true; }catch(e){}
+    _mem[k]=s; // always keep in-memory too
   },
   del(key){
-    _tryLocal('del','mn_'+key);
-    delete _mem['mn_'+key];
+    const k='mn_'+key;
+    try{ localStorage.removeItem(k); }catch(e){}
+    _delCookie(k);
+    delete _mem[k];
   }
 };
 
 /* ══════════════════════════════════════════════════════════
-   SESSION LAYER — tries sessionStorage, then in-memory
+   SESSION LAYER — cookie + sessionStorage + in-memory
    ══════════════════════════════════════════════════════════ */
 let _sessionMem = null;
 
 function getSession(){
-  try {
-    const s = sessionStorage.getItem('mn_session');
-    return s ? JSON.parse(s) : _sessionMem;
-  } catch(e){ return _sessionMem; }
+  // try sessionStorage
+  try{ const s=sessionStorage.getItem('mn_session'); if(s) return JSON.parse(s); }catch(e){}
+  // try cookie
+  try{ const s=_getCookie('mn_session'); if(s) return JSON.parse(s); }catch(e){}
+  return _sessionMem;
 }
-
 function setSession(obj){
   _sessionMem = obj;
-  try { sessionStorage.setItem('mn_session', JSON.stringify(obj)); } catch(e){}
+  const s=JSON.stringify(obj);
+  try{ sessionStorage.setItem('mn_session',s); }catch(e){}
+  try{ _setCookie('mn_session',s,1); }catch(e){}
 }
-
 function clearSession(){
-  _sessionMem = null;
-  try { sessionStorage.removeItem('mn_session'); } catch(e){}
+  _sessionMem=null;
+  try{ sessionStorage.removeItem('mn_session'); }catch(e){}
+  _delCookie('mn_session');
 }
 
 let session = getSession();
@@ -836,7 +881,8 @@ let session = getSession();
 function getUsers(){
   return DB.get('users') || [{
     id:'u1', username:'admin', displayName:'Admin',
-    password: btoa('admin123'), role:'admin',
+    password: 'admin123',   /* stored as plain text */
+    role:'admin',
     createdAt: new Date().toISOString()
   }];
 }
@@ -864,20 +910,18 @@ function doLogin(){
 
   const users = getUsers();
 
-  /* Compare password — stored as btoa OR plain (legacy) */
+  /* Simple password check — stored as plain text.
+     Also handles old btoa-encoded passwords for backwards compat. */
   const user = users.find(x => {
     if(x.username !== u) return false;
-    /* try btoa match */
-    try { if(x.password === btoa(p)) return true; } catch(e){}
-    /* try plain match (legacy) */
-    if(x.password === p) return true;
-    /* try decoded match */
-    try { if(atob(x.password) === p) return true; } catch(e){}
+    if(x.password === p) return true;          // plain match
+    try{ if(x.password === btoa(p)) return true; }catch(e){}  // btoa match
+    try{ if(atob(x.password) === p) return true; }catch(e){}  // legacy decode
     return false;
   });
 
   if(!user){
-    document.getElementById('loginMsg').textContent = 'गलत username या password।';
+    document.getElementById('loginMsg').textContent = '❌ गलत username या password।';
     return;
   }
 
@@ -1277,7 +1321,7 @@ function createUser(){
   const users = getUsers();
   if(users.find(u=>u.username===username)){ showToast('❌ यह username पहले से exists करता है','error'); return; }
   const selectedRole = document.getElementById('new_user_role').value || 'trainer';
-  users.push({ id:uid(), username, displayName:display||username, password:btoa(pass), role:selectedRole, createdAt: new Date().toISOString() });
+  users.push({ id:uid(), username, displayName:display||username, password:pass, role:selectedRole, createdAt: new Date().toISOString() });
   saveUsers(users);
   addAudit(session?.displayName||'admin','USER_CREATE', `${username} (${selectedRole})`);
   document.getElementById('new_user').value=''; document.getElementById('new_user_display').value='';
@@ -1337,7 +1381,7 @@ function saveEditUser(){
   const users = getUsers();
   const u = users.find(x=>x.id===id); if(!u) return;
   u.displayName = display || u.displayName;
-  if(newPass) u.password = btoa(newPass);
+  if(newPass) u.password = newPass;
   if(u.username === session?.username && newRole !== 'admin'){
     showToast('❌ खुद का role Admin से नीचे नहीं कर सकते','error'); return;
   }
@@ -1372,12 +1416,11 @@ function changePassword(){
   if(!u){ showToast('❌ User not found','error'); return; }
   if(oldP){
     let match = false;
-    try{ if(u.password === btoa(oldP)) match = true; } catch(e){}
-    try{ if(atob(u.password) === oldP) match = true; } catch(e){}
     if(u.password === oldP) match = true;
+    try{ if(atob(u.password) === oldP) match = true; }catch(e){}
     if(!match){ showToast('❌ Old password गलत है','error'); return; }
   }
-  u.password = btoa(newP);
+  u.password = newP;
   saveUsers(users);
   addAudit(session?.displayName||'admin','PASS_CHANGE', username);
   document.getElementById('cp_user').value=''; document.getElementById('cp_old').value=''; document.getElementById('cp_new').value='';
